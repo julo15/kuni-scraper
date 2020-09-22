@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@types/node": "^14.11.2",
+    "@types/node-notifier": "^8.0.0"
+  },
+  "dependencies": {
+    "jsdom": "^16.4.0",
+    "node-fetch": "^2.6.1",
+    "node-notifier": "^8.0.0"
+  }
+}
