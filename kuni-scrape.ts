@@ -21,12 +21,16 @@ const evgaGetProductStock = (dom: JSDOM): StockResult => ({
 });
 
 const getProductStock = async (url: string): Promise<StockResult | null> => {
-    const response = await fetch(url);
-    const text = await response.text();
-    const dom = await new JSDOM(text);
-    if (url.startsWith('https://www.evga.com')) {
-        return evgaGetProductStock(dom);
-    } 
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        const dom = await new JSDOM(text);
+        if (url.startsWith('https://www.evga.com')) {
+            return evgaGetProductStock(dom);
+        } 
+    } catch (e) {
+        console.log(`Error checking ${url}\n${e}`);
+    }
 
     return null;
 };
