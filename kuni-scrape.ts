@@ -100,14 +100,14 @@ const main = async () => {
         return;
     }
 
-    const wait = 2;
+    const wait = 10;
     while (true) {
         console.log(`Starting iteration: ${new Date()}`);
         await checkAllUrls(URLS);
         console.log(`Ending iteration: ${new Date()}`);
-        console.log(`Waiting ${wait} minutes before trying again...`);
+        console.log(`Waiting ${wait} seconds before trying again...`);
         console.log('Press ctrl+c to quit.');
-        await sleep(wait * 60 * 1000);
+        await sleep(wait * 1000);
     }
 };
 
