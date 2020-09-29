@@ -102,14 +102,21 @@ const log = (text: string) => {
 
 const main = async () => {
     let url = process.argv[2];
+    if (url === 'push') {
+        console.log('Sending test push');
+        notifier.notify({
+            title: 'Enabling push',
+            message: 'If you see this, then things work.',
+        });
+        return;
+    }
+
     if (url) {
         log('Checking passed-in url');
         await checkUrl(url);
         log('Done checking url');
         return;
     }
-
-    
 
     const wait = 10;
     while (true) {
