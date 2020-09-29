@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { JSDOM } from 'jsdom';
 import * as notifier from 'node-notifier';
+import * as fs from 'fs';
 
 const URLS: string[] = [
     'https://www.evga.com/products/product.aspx?pn=10G-P5-3881-KR',
@@ -35,7 +36,7 @@ const neweggGetProductStock = (dom: JSDOM): StockResult => {
         let available = !node.innerHTML.includes('OUT OF STOCK');
         let url = infos.item(index).href;
         let product = infos.item(index).innerHTML;
-        console.log(`Product: ${product}\nLink: ${url}\nAvailable: ${available}\n`);
+        log(`Product: ${product}\nLink: ${url}\nAvailable: ${available}\n`);
         if (available) {
             result = {
                 available: true,
@@ -59,7 +60,7 @@ const getProductStock = async (url: string): Promise<StockResult | null> => {
             return neweggGetProductStock(dom);
         }
     } catch (e) {
-        console.log(`Failed checking url: ${url}\nError: ${e}`);
+        log(`Failed checking url: ${url}\nError: ${e}`);
     }
 
     return null;
@@ -81,7 +82,7 @@ const checkUrl = async (queryUrl: string): Promise<void> => {
     } else {
         text = `Failed: ${queryUrl}`;
     }
-    console.log(`${text}\n\n`);
+    log(`${text}\n\n`);
 };
 
 const checkAllUrls = async (urls: string[]) => {
@@ -91,22 +92,32 @@ const checkAllUrls = async (urls: string[]) => {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const stream = fs.createWriteStream('log.txt', { flags: 'a' });
+
+const log = (text: string) => {
+    console.log(text);
+    stream.write(`${text}\n`);
+};
+
+
 const main = async () => {
     let url = process.argv[2];
     if (url) {
-        console.log('Checking passed-in url');
+        log('Checking passed-in url');
         await checkUrl(url);
-        console.log('Done checking url');
+        log('Done checking url');
         return;
     }
 
+    
+
     const wait = 10;
     while (true) {
-        console.log(`Starting iteration: ${new Date()}`);
+        log(`Starting iteration: ${new Date()}`);
         await checkAllUrls(URLS);
-        console.log(`Ending iteration: ${new Date()}`);
-        console.log(`Waiting ${wait} seconds before trying again...`);
-        console.log('Press ctrl+c to quit.');
+        log(`Ending iteration: ${new Date()}`);
+        log(`Waiting ${wait} seconds before trying again...`);
+        log('Press ctrl+c to quit.');
         await sleep(wait * 1000);
     }
 };
