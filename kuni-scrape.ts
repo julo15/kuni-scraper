@@ -21,37 +21,32 @@ type StockResult = {
     url?: string;
 };
 
-const evgaGetProductStock = (dom: JSDOM): StockResult => ({
+const evgaGetProductStock = (dom: JSDOM): StockResult[] => [({
     available: dom.window.document.querySelector('#LFrame_pnlOutOfStock') === null,
     product: dom.window.document.querySelector('#LFrame_lblProductName').innerHTML,
-});
+})];
 
-const neweggGetProductStock = (dom: JSDOM): StockResult => {
+const neweggGetProductStock = (dom: JSDOM): StockResult[] => {
     // Assumes the link is a search results page
     const queryItem = '.item-container .item-info';
     const promoTexts = dom.window.document.querySelectorAll(`${queryItem} .item-promo`);
     const infos = dom.window.document.querySelectorAll(`${queryItem} .item-title`);
-    let result: StockResult = {
-        available: false,
-        product: 'NewEgg',
-    };
+    const results: StockResult[] = [];
     promoTexts.forEach((node, index) => {
         const available = !node.innerHTML.includes('OUT OF STOCK');
         const url = infos.item(index).href;
         const product = infos.item(index).innerHTML;
         log(`Product: ${product}\nLink: ${url}\nAvailable: ${available}\n`);
-        if (available) {
-            result = {
-                available: true,
-                product,
-                url,
-            };
-        }
+        results.push({
+            available,
+            product,
+            url,
+        });
     });
-    return result;
+    return results;
 };
 
-const bestbuyGetProductStock = (dom: JSDOM): StockResult => {
+const bestbuyGetProductStock = (dom: JSDOM): StockResult[] => {
     console.log('best buy');
     const itemLinks = dom.window.document.querySelectorAll('.sku-item .sku-header a');
     const addToCardButtons = dom.window.document.querySelectorAll('.sku-item .fulfillment-add-to-cart-button');
@@ -59,38 +54,33 @@ const bestbuyGetProductStock = (dom: JSDOM): StockResult => {
     itemLinks.forEach((node, index) => {
         console.log(node);
     });
-    return {
+    return [{
         available: false,
         product: 'fake',
-    };
+    }];
 };
 
-const bhGetProductStock = (dom: JSDOM): StockResult => {
+const bhGetProductStock = (dom: JSDOM): StockResult[] => {
     const productNames = dom.window.document.querySelectorAll('div[class^=productInner] h3 a span');
     const links = dom.window.document.querySelectorAll('div[class^=productInner] h3 a');
     const conversions = dom.window.document.querySelectorAll('div[class^=productInner] div[class^=conversion]');
 
-    let result: StockResult = {
-        available: false,
-        product: 'B&H',
-    };
+    let results: StockResult[] = [];
     productNames.forEach((node, index) => {
         const product = node.innerHTML;
         const available = !!conversions[index].querySelector('button[class^=atcBtn]');
         const url = `https://www.bhphotovideo.com${links[index].href}`;
         log(`Product: ${product}\nLink: ${url}\nAvailable: ${available}\n`);
-        if (available) {
-            result = {
-                available: true,
-                product,
-                url,
-            };
-        }
+        results.push({
+            available,
+            product,
+            url,
+        });
     });
-    return result;
+    return results;
 };
 
-const getProductStock = async (url: string): Promise<StockResult | null> => {
+const getProductStock = async (url: string): Promise<StockResult[] | null> => {
     try {
         const response = await fetch(url, {
             'Accept': 'text/html',
@@ -118,11 +108,13 @@ const getProductStock = async (url: string): Promise<StockResult | null> => {
 };
 
 const checkUrl = async (queryUrl: string): Promise<void> => {
-    const result = await getProductStock(queryUrl);
+    const results = await getProductStock(queryUrl);
     let text: string;
-    if (result) {
+    if (results) {
+      results.forEach((result: StockResult) => {
         const { available, product, url } = result;
         text = `Product: ${product}\nAvailable: ${available}`;
+        log(`${text}\n\n`);
         if (available) {
             notifier.notify({
                 title: 'GO GO GO CLICK ME BUY NOW!!!',
@@ -130,10 +122,10 @@ const checkUrl = async (queryUrl: string): Promise<void> => {
                 open: url || queryUrl,
             });
         }
+      });
     } else {
-        text = `Failed: ${queryUrl}`;
+      text = `Failed: ${queryUrl}`;
     }
-    log(`${text}\n\n`);
 };
 
 const checkAllUrls = async (urls: string[]) => {
